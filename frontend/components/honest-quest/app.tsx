@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import confetti from "canvas-confetti"
 import {
   MISSIONS_BY_GOAL,
@@ -13,13 +13,19 @@ import { Topbar } from "./topbar"
 import { DashboardView } from "./dashboard-view"
 import { ScheduleView } from "./schedule-view"
 import { ProfileView } from "./profile-view"
+import { LevelUpModal } from "./level-up-modal"
+import { OnboardingModal, type OnboardingResult } from "./onboarding-modal"
 
 const NAME = "Caio Hero"
 const BASE_XP = 1200
 const BASE_COMPLETED = 12
+const ONBOARDING_KEY = "hq_onboarding_done"
 
 function buildMissions(goal: GoalId): Mission[] {
-  return MISSIONS_BY_GOAL[goal].map((m, i) => ({ ...m, done: i === 0 && goal === "estudos" }))
+  return MISSIONS_BY_GOAL[goal].map((m, i) => ({
+    ...m,
+    done: i === 0 && goal === "estudos",
+  }))
 }
 
 function fireConfetti() {
@@ -45,22 +51,66 @@ export function HonestQuestApp() {
     "Hoje quero focar-me em avançar na matéria de Cálculo e não falhar o treino.",
   )
 
+  // ─── Level-up tracking ────────────────────────────────────────────────────
+  const [showLevelUp, setShowLevelUp] = useState(false)
+  const [justLeveledUp, setJustLeveledUp] = useState(false)
+  const [lastCompletedEpic, setLastCompletedEpic] = useState(false)
+  const prevLevelRef = useRef<number | null>(null)
+
+  // ─── Onboarding ───────────────────────────────────────────────────────────
+  const [onboardingDone, setOnboardingDone] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true
+    return localStorage.getItem(ONBOARDING_KEY) === "true"
+  })
+
   const totalXp = BASE_XP + earnedXp
   const { level, xpInLevel, xpForNext } = useMemo(() => levelFromXp(totalXp), [totalXp])
   const completed = BASE_COMPLETED + extraCompleted
 
+  // Detecta subida de nível
+  useEffect(() => {
+    if (prevLevelRef.current === null) {
+      prevLevelRef.current = level
+      return
+    }
+    if (level > prevLevelRef.current) {
+      prevLevelRef.current = level
+      setShowLevelUp(true)
+      setJustLeveledUp(true)
+      setTimeout(() => setJustLeveledUp(false), 5000)
+    }
+  }, [level])
+
+  function handleOnboardingComplete(result: OnboardingResult) {
+    localStorage.setItem(ONBOARDING_KEY, "true")
+    localStorage.setItem("hq_profile", JSON.stringify(result))
+    // Aplica o objetivo escolhido no onboarding
+    if (result.mainGoal as GoalId) {
+      setActiveGoal(result.mainGoal as GoalId)
+      setMissions(buildMissions(result.mainGoal as GoalId))
+    }
+    setOnboardingDone(true)
+  }
+
   function selectGoal(goal: GoalId) {
     setActiveGoal(goal)
     setMissions(buildMissions(goal))
+    setLastCompletedEpic(false)
   }
 
   function completeMission(id: string) {
     setMissions((prev) => {
       const target = prev.find((m) => m.id === id)
       if (!target || target.done) return prev
-      setEarnedXp((xp) => xp + target.xp)
+
+      const isEpic = !!target.isEpic
+      const xpGain = target.xp
+
+      setEarnedXp((xp) => xp + xpGain)
       setExtraCompleted((c) => c + 1)
+      setLastCompletedEpic(isEpic)
       fireConfetti()
+
       return prev.map((m) => (m.id === id ? { ...m, done: true } : m))
     })
   }
@@ -68,53 +118,71 @@ export function HonestQuestApp() {
   const greeting = `Bem-vindo de volta, ${NAME.split(" ")[0]}! 🚀`
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground">
-      <Sidebar active={view} onChange={setView} />
+    <>
+      {/* Onboarding na primeira visita */}
+      {!onboardingDone && (
+        <OnboardingModal onComplete={handleOnboardingComplete} />
+      )}
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <Topbar
-          name={NAME}
+      {/* Modal de level-up */}
+      {showLevelUp && (
+        <LevelUpModal
           level={level}
           totalXp={totalXp}
-          streak={5}
-          greeting={greeting}
+          onClose={() => setShowLevelUp(false)}
         />
+      )}
 
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-24 pt-6 md:px-8 lg:pb-10">
-          {view === "dashboard" && (
-            <DashboardView
-              name={NAME}
-              activeGoal={activeGoal}
-              onSelectGoal={selectGoal}
-              missions={missions}
-              onComplete={completeMission}
-              intention={intention}
-              onIntentionChange={setIntention}
-              streak={5}
-              completed={completed}
-              level={level}
-              xpInLevel={xpInLevel}
-              xpForNext={xpForNext}
-            />
-          )}
+      <div className="flex min-h-screen bg-background text-foreground">
+        <Sidebar active={view} onChange={setView} />
 
-          {view === "horarios" && <ScheduleView />}
+        <div className="flex min-w-0 flex-1 flex-col">
+          <Topbar
+            name={NAME}
+            level={level}
+            totalXp={totalXp}
+            streak={5}
+            greeting={greeting}
+          />
 
-          {view === "perfil" && (
-            <ProfileView
-              name={NAME}
-              level={level}
-              totalXp={totalXp}
-              xpInLevel={xpInLevel}
-              xpForNext={xpForNext}
-              streak={5}
-              completed={completed}
-            />
-          )}
-        </main>
+          <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-24 pt-6 md:px-8 lg:pb-10">
+            {view === "dashboard" && (
+              <DashboardView
+                name={NAME}
+                activeGoal={activeGoal}
+                onSelectGoal={selectGoal}
+                missions={missions}
+                onComplete={completeMission}
+                intention={intention}
+                onIntentionChange={setIntention}
+                streak={5}
+                completed={completed}
+                level={level}
+                xpInLevel={xpInLevel}
+                xpForNext={xpForNext}
+                lastCompletedEpic={lastCompletedEpic}
+                justLeveledUp={justLeveledUp}
+              />
+            )}
+
+            {view === "horarios" && <ScheduleView />}
+
+            {view === "perfil" && (
+              <ProfileView
+                name={NAME}
+                level={level}
+                totalXp={totalXp}
+                xpInLevel={xpInLevel}
+                xpForNext={xpForNext}
+                streak={5}
+                completed={completed}
+              />
+            )}
+          </main>
+        </div>
+
+        <BottomNav active={view} onChange={setView} />
       </div>
-
-      <BottomNav active={view} onChange={setView} />
-    </div>
+    </>
   )
 }

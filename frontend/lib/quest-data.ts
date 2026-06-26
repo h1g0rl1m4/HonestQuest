@@ -12,6 +12,11 @@ import {
   Moon,
   Apple,
   Target,
+  Sword,
+  FlameKindling,
+  ScrollText,
+  Microscope,
+  Mountain,
 } from "lucide-react"
 
 export type GoalId = "estudos" | "treino" | "produtividade" | "habitos"
@@ -21,7 +26,6 @@ export interface Goal {
   label: string
   tagline: string
   icon: LucideIcon
-  /** token name used for accent color: primary | success | info | warning */
   accent: "primary" | "success" | "info" | "warning"
 }
 
@@ -33,6 +37,8 @@ export interface Mission {
   xp: number
   icon: LucideIcon
   done: boolean
+  isEpic?: boolean     // Missão épica: sessão longa com XP bónus
+  xpMultiplier?: number // Multiplicador de XP para épicas (default 2x)
 }
 
 export const GOALS: Goal[] = [
@@ -92,6 +98,27 @@ export const MISSIONS_BY_GOAL: Record<GoalId, Omit<Mission, "done">[]> = {
       xp: 10,
       icon: NotebookPen,
     },
+    // ÉPICA
+    {
+      id: "est-epic-1",
+      title: "Maratona de Estudo: Cálculo Completo",
+      detail: "Três capítulos seguidos. Modo guerreiro ativado.",
+      duration: "2h 30min",
+      xp: 80,
+      icon: Microscope,
+      isEpic: true,
+      xpMultiplier: 2,
+    },
+    {
+      id: "est-epic-2",
+      title: "Projeto de pesquisa aprofundada",
+      detail: "Escolhe um tema e escreve um resumo completo",
+      duration: "1h 45min",
+      xp: 60,
+      icon: ScrollText,
+      isEpic: true,
+      xpMultiplier: 2,
+    },
   ],
   treino: [
     {
@@ -117,6 +144,27 @@ export const MISSIONS_BY_GOAL: Record<GoalId, Omit<Mission, "done">[]> = {
       duration: "10 min",
       xp: 8,
       icon: HeartPulse,
+    },
+    // ÉPICA
+    {
+      id: "tre-epic-1",
+      title: "Desafio do Guerreiro: Full Body",
+      detail: "Treino completo sem pausas. Sem desculpas.",
+      duration: "1h 30min",
+      xp: 60,
+      icon: Sword,
+      isEpic: true,
+      xpMultiplier: 2,
+    },
+    {
+      id: "tre-epic-2",
+      title: "Trilha da Montanha",
+      detail: "Corrida longa ou caminhada de alta intensidade",
+      duration: "1h 15min",
+      xp: 50,
+      icon: Mountain,
+      isEpic: true,
+      xpMultiplier: 2,
     },
   ],
   produtividade: [
@@ -144,6 +192,17 @@ export const MISSIONS_BY_GOAL: Record<GoalId, Omit<Mission, "done">[]> = {
       xp: 10,
       icon: Zap,
     },
+    // ÉPICA
+    {
+      id: "pro-epic-1",
+      title: "Sessão Épica de Foco Profundo",
+      detail: "3 blocos Pomodoro consecutivos. Sem redes sociais.",
+      duration: "2h 30min",
+      xp: 75,
+      icon: FlameKindling,
+      isEpic: true,
+      xpMultiplier: 2,
+    },
   ],
   habitos: [
     {
@@ -170,13 +229,43 @@ export const MISSIONS_BY_GOAL: Record<GoalId, Omit<Mission, "done">[]> = {
       xp: 10,
       icon: Apple,
     },
+    // ÉPICA
+    {
+      id: "hab-epic-1",
+      title: "Dia de Hábito Perfeito",
+      detail: "Água, sono, refeição E exercício. Tudo no mesmo dia.",
+      duration: "Dia todo",
+      xp: 70,
+      icon: FlameKindling,
+      isEpic: true,
+      xpMultiplier: 2,
+    },
   ],
 }
 
+// ─── XP & NÍVEIS ─────────────────────────────────────────────────────────────
 export const XP_PER_LEVEL = 2000
 
 export function levelFromXp(totalXp: number) {
   const level = Math.floor(totalXp / XP_PER_LEVEL) + 1
   const xpInLevel = totalXp % XP_PER_LEVEL
   return { level, xpInLevel, xpForNext: XP_PER_LEVEL }
+}
+
+// Títulos por nível — parte do sistema de gamificação
+export const LEVEL_TITLES: Record<number, string> = {
+  1:  "Recruta",
+  2:  "Aprendiz",
+  3:  "Estudante Sério",
+  4:  "Focado",
+  5:  "Disciplinado",
+  6:  "Guerreiro do Foco",
+  7:  "Mestre da Rotina",
+  8:  "Lenda em Progresso",
+  9:  "Quase Lendário",
+  10: "LENDÁRIO ⚡",
+}
+
+export function getLevelTitle(level: number): string {
+  return LEVEL_TITLES[level] ?? `Nível ${level} Supremo`
 }

@@ -11,6 +11,8 @@ import {
 } from "lucide-react"
 import { XpBar } from "./xp-bar"
 import { cn } from "@/lib/utils"
+import { getLevelTitle } from "@/lib/quest-data"
+
 
 interface Achievement {
   title: string
@@ -69,7 +71,7 @@ export function ProfileView({
             </div>
             <div className="pb-1">
               <h2 className="font-heading text-xl font-bold">{name}</h2>
-              <p className="text-sm text-muted-foreground">Nível {level} · Herói da disciplina</p>
+              <p className="text-sm text-muted-foreground">Nível {level} · {getLevelTitle(level)}</p>
             </div>
           </div>
 

@@ -1,11 +1,12 @@
 "use client"
 
-import { ListChecks, PartyPopper } from "lucide-react"
+import { ListChecks, PartyPopper, Sword } from "lucide-react"
 import type { GoalId, Mission } from "@/lib/quest-data"
 import { GoalSelector } from "./goal-selector"
 import { StatCards } from "./stat-cards"
 import { MissionCard } from "./mission-card"
 import { IntentionCard } from "./intention-card"
+import { MentorCard } from "./mentor-card"
 
 export function DashboardView({
   name,
@@ -20,6 +21,8 @@ export function DashboardView({
   level,
   xpInLevel,
   xpForNext,
+  lastCompletedEpic,
+  justLeveledUp,
 }: {
   name: string
   activeGoal: GoalId
@@ -33,9 +36,16 @@ export function DashboardView({
   level: number
   xpInLevel: number
   xpForNext: number
+  lastCompletedEpic?: boolean
+  justLeveledUp?: boolean
 }) {
-  const remaining = missions.filter((m) => !m.done).length
-  const allDone = remaining === 0
+  const regularMissions = missions.filter((m) => !m.isEpic)
+  const epicMissions = missions.filter((m) => m.isEpic)
+  const regularRemaining = regularMissions.filter((m) => !m.done).length
+  const epicRemaining = epicMissions.filter((m) => !m.done).length
+  const allRegularDone = regularRemaining === 0 && regularMissions.length > 0
+
+  const totalDone = missions.filter((m) => m.done).length
 
   return (
     <div className="space-y-6">
@@ -59,37 +69,82 @@ export function DashboardView({
       <GoalSelector active={activeGoal} onSelect={onSelectGoal} />
 
       <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
-        <section aria-labelledby="missions-heading" className="rounded-2xl border border-border bg-card p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <ListChecks className="size-5 text-primary" aria-hidden="true" />
-              <h2 id="missions-heading" className="font-heading text-lg font-semibold">
-                Missões de hoje
-              </h2>
+        {/* Coluna esquerda: Missões */}
+        <div className="space-y-5">
+          {/* Missões regulares */}
+          <section aria-labelledby="missions-heading" className="rounded-2xl border border-border bg-card p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ListChecks className="size-5 text-primary" aria-hidden="true" />
+                <h2 id="missions-heading" className="font-heading text-lg font-semibold">
+                  Missões de hoje
+                </h2>
+              </div>
+              <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+                {regularRemaining} restantes
+              </span>
             </div>
-            <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-              {remaining} restantes
-            </span>
-          </div>
 
-          {allDone ? (
-            <div className="animate-hq-pop flex flex-col items-center gap-2 rounded-xl border border-success/30 bg-success/5 px-4 py-10 text-center">
-              <PartyPopper className="size-8 text-success" aria-hidden="true" />
-              <p className="font-heading text-base font-semibold">Todas as missões concluídas!</p>
-              <p className="text-sm text-muted-foreground">
-                Mandaste bem. Volta amanhã para manter o teu streak.
+            {allRegularDone ? (
+              <div className="animate-hq-pop flex flex-col items-center gap-2 rounded-xl border border-success/30 bg-success/5 px-4 py-8 text-center">
+                <PartyPopper className="size-8 text-success" aria-hidden="true" />
+                <p className="font-heading text-base font-semibold">Missões diárias concluídas!</p>
+                <p className="text-sm text-muted-foreground">
+                  {epicRemaining > 0
+                    ? "Tens missões épicas à tua espera ⬇️"
+                    : "Mandaste bem. Volta amanhã para manter o teu streak."}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {regularMissions.map((mission) => (
+                  <MissionCard key={mission.id} mission={mission} onComplete={onComplete} />
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Missões épicas */}
+          {epicMissions.length > 0 && (
+            <section aria-labelledby="epic-heading" className="rounded-2xl border border-warning/30 bg-card p-5">
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Sword className="size-5 text-warning" aria-hidden="true" />
+                  <h2 id="epic-heading" className="font-heading text-lg font-semibold">
+                    Missões épicas
+                  </h2>
+                  <span className="rounded-full bg-warning/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-warning">
+                    Sessões longas
+                  </span>
+                </div>
+                <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+                  {epicRemaining} restantes
+                </span>
+              </div>
+              <p className="mb-4 text-xs text-muted-foreground">
+                Desafios de alto esforço com XP bónus. Apenas para os determinados.
               </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {missions.map((mission) => (
-                <MissionCard key={mission.id} mission={mission} onComplete={onComplete} />
-              ))}
-            </div>
+              <div className="space-y-3">
+                {epicMissions.map((mission) => (
+                  <MissionCard key={mission.id} mission={mission} onComplete={onComplete} />
+                ))}
+              </div>
+            </section>
           )}
-        </section>
+        </div>
 
-        <IntentionCard intention={intention} onChange={onIntentionChange} />
+        {/* Coluna direita: Mentor + Intenção */}
+        <div className="space-y-4">
+          <MentorCard
+            streak={streak}
+            missionsDone={totalDone}
+            totalMissions={missions.length}
+            epicDoneThisAction={lastCompletedEpic}
+            justLeveledUp={justLeveledUp}
+            isNewSession={totalDone === 0}
+          />
+          <IntentionCard intention={intention} onChange={onIntentionChange} />
+        </div>
       </div>
     </div>
   )
