@@ -33,9 +33,9 @@ export function MentorCard({
     isNewSession,
   })
 
-  const [message, setMessage] = useState(() => getMentorMessage(mood))
+  const [message, setMessage] = useState<MentorMessage | null>(null)
 
-  // Atualiza a mensagem quando o estado muda
+  // Atualiza a mensagem quando o estado muda (só no lado do cliente)
   useEffect(() => {
     setMessage(getMentorMessage(mood))
   }, [mood, missionsDone, justLeveledUp, epicDoneThisAction])
@@ -86,10 +86,10 @@ export function MentorCard({
       </div>
 
       <p className="text-sm leading-relaxed text-foreground/90">
-        &ldquo;{message.text}&rdquo;
+        {message ? <>&ldquo;{message.text}&rdquo;</> : <span className="opacity-0">A carregar mentor...</span>}
       </p>
 
-      {message.cta && onCtaClick && (
+      {message?.cta && onCtaClick && (
         <button
           onClick={onCtaClick}
           className="mt-3 flex items-center gap-1 text-xs font-semibold text-primary transition-colors hover:text-primary/80"
