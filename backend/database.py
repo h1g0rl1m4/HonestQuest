@@ -8,7 +8,7 @@ from models import Base
 DATABASE_URL = "sqlite+aiosqlite:///./honestquest.db"
 
 # Criar o motor assíncrono para o SQLite
-engine = create_async_engine(DATABASE_URL, echo=True)
+engine = create_async_engine(DATABASE_URL, echo=False)
 
 # Criar a fábrica de sessões
 AsyncSessionLocal = async_sessionmaker(
@@ -30,4 +30,4 @@ async def create_tables():
     """
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-        print("✅ Base de dados configurada com sucesso!")
+        print("[OK] Base de dados configurada com sucesso!")
