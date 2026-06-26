@@ -58,10 +58,12 @@ export function HonestQuestApp() {
   const prevLevelRef = useRef<number | null>(null)
 
   // ─── Onboarding ───────────────────────────────────────────────────────────
-  const [onboardingDone, setOnboardingDone] = useState<boolean>(() => {
-    if (typeof window === "undefined") return true
-    return localStorage.getItem(ONBOARDING_KEY) === "true"
-  })
+  const [onboardingDone, setOnboardingDone] = useState<boolean>(true) // true by default for SSR to prevent hydration mismatch
+
+  useEffect(() => {
+    const isDone = localStorage.getItem(ONBOARDING_KEY) === "true"
+    setOnboardingDone(isDone)
+  }, [])
 
   const totalXp = BASE_XP + earnedXp
   const { level, xpInLevel, xpForNext } = useMemo(() => levelFromXp(totalXp), [totalXp])
