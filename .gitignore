@@ -1,0 +1,31 @@
+# ===================== PYTHON =====================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+.env
+.venv
+venv/
+env/
+backend/honestquest.db
+
+# ===================== NODE / NEXT.JS =====================
+node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/.env
+frontend/.env.local
+frontend/.env*.local
+
+# ===================== GERAL =====================
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/
+*.suo
+*.user
