@@ -38,6 +38,8 @@ export function DashboardView({
   xpForNext: number
   lastCompletedEpic?: boolean
   justLeveledUp?: boolean
+  onGenerateSecretMission?: () => void
+  isGeneratingSecret?: boolean
 }) {
   const regularMissions = missions.filter((m) => !m.isEpic)
   const epicMissions = missions.filter((m) => m.isEpic)
@@ -131,6 +133,40 @@ export function DashboardView({
               </div>
             </section>
           )}
+          {/* Motor de missões secretas (IA) */}
+          <section aria-labelledby="secret-heading" className="rounded-2xl border border-primary/30 bg-card p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <PartyPopper className="size-5 text-primary" aria-hidden="true" />
+                <h2 id="secret-heading" className="font-heading text-lg font-semibold">
+                  Missão Secreta (IA)
+                </h2>
+                <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
+                  Gerada na hora
+                </span>
+              </div>
+            </div>
+            <p className="mb-4 text-xs text-muted-foreground">
+              Deixa a inteligência artificial analisar o teu perfil e criar um desafio surpresa.
+            </p>
+            <button
+              onClick={onGenerateSecretMission}
+              disabled={isGeneratingSecret}
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isGeneratingSecret ? (
+                <>
+                  <span className="size-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+                  A IA está a pensar...
+                </>
+              ) : (
+                <>
+                  <PartyPopper className="size-4" />
+                  Gerar Missão Secreta
+                </>
+              )}
+            </button>
+          </section>
         </div>
 
         {/* Coluna direita: Mentor + Intenção */}

@@ -14,6 +14,7 @@ from contextlib import asynccontextmanager
 
 from database import create_tables
 from routers.horarios_router import router as horarios_router
+from routers.missoes_router import router as missoes_router
 
 
 @asynccontextmanager
@@ -32,6 +33,7 @@ app = FastAPI(
 
 # Registar routers
 app.include_router(horarios_router)
+app.include_router(missoes_router)
 
 
 @app.get("/")

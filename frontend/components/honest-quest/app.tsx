@@ -119,6 +119,50 @@ export function HonestQuestApp() {
 
   const greeting = `Bem-vindo de volta, ${NAME.split(" ")[0]}! 🚀`
 
+  const [isGeneratingSecret, setIsGeneratingSecret] = useState(false)
+
+  async function generateSecretMission() {
+    setIsGeneratingSecret(true)
+    try {
+      // Lê perfil do localStorage (salvo no onboarding)
+      const profileData = localStorage.getItem("hq_profile")
+      const profile = profileData ? JSON.parse(profileData) : {}
+      
+      const reqBody = {
+        nome: profile.name || NAME.split(" ")[0],
+        objetivo: profile.mainGoal || activeGoal,
+        tempo: parseInt(profile.timeAvailable || "30", 10)
+      }
+
+      const res = await fetch("http://127.0.0.1:8000/missoes/gerar-secreta", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(reqBody)
+      })
+      
+      if (!res.ok) throw new Error("Erro ao gerar missão")
+      const data = await res.json()
+      
+      const newMission: Mission = {
+        id: `secret-${Date.now()}`,
+        title: data.titulo,
+        detail: data.detalhes,
+        duration: "?? min",
+        xp: data.xp_recompensa || 100,
+        icon: Sword, // Ou outro ícone para missão secreta
+        done: false,
+        isEpic: true,
+      }
+      
+      setMissions(prev => [...prev, newMission])
+    } catch (err) {
+      console.error(err)
+      alert("Falha ao contactar a IA local. Verifica se o backend está a correr.")
+    } finally {
+      setIsGeneratingSecret(false)
+    }
+  }
+
   return (
     <>
       {/* Onboarding na primeira visita */}
@@ -164,6 +208,8 @@ export function HonestQuestApp() {
                 xpForNext={xpForNext}
                 lastCompletedEpic={lastCompletedEpic}
                 justLeveledUp={justLeveledUp}
+                onGenerateSecretMission={generateSecretMission}
+                isGeneratingSecret={isGeneratingSecret}
               />
             )}
 

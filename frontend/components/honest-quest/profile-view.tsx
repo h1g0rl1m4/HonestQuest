@@ -126,6 +126,45 @@ export function ProfileView({
             </article>
           ))}
         </div>
+      <section aria-labelledby="titles-heading" className="mt-8">
+        <div className="mb-3 flex items-baseline justify-between">
+          <h2 id="titles-heading" className="font-heading text-lg font-semibold">
+            Biblioteca de Títulos
+          </h2>
+          <span className="text-sm text-muted-foreground">
+            Desbloqueados ao subir de nível
+          </span>
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {Array.from({ length: 10 }).map((_, i) => {
+            const targetLevel = i + 1
+            const titleName = getLevelTitle(targetLevel)
+            const isUnlocked = level >= targetLevel
+
+            return (
+              <div
+                key={targetLevel}
+                className={cn(
+                  "flex items-center justify-between rounded-xl border p-3",
+                  isUnlocked ? "border-primary/30 bg-primary/5" : "border-dashed border-border bg-card/40 opacity-50"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <span className={cn(
+                    "flex size-8 items-center justify-center rounded-lg text-xs font-bold",
+                    isUnlocked ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                  )}>
+                    L{targetLevel}
+                  </span>
+                  <span className={cn("font-medium", isUnlocked ? "text-foreground" : "text-muted-foreground")}>
+                    {titleName}
+                  </span>
+                </div>
+                {!isUnlocked && <Lock className="size-4 text-muted-foreground" />}
+              </div>
+            )
+          })}
+        </div>
       </section>
     </div>
   )
