@@ -13,8 +13,10 @@ import { Topbar } from "./topbar"
 import { DashboardView } from "./dashboard-view"
 import { ScheduleView } from "./schedule-view"
 import { ProfileView } from "./profile-view"
+import { EvolutionView } from "./evolution-view"
 import { LevelUpModal } from "./level-up-modal"
 import { OnboardingModal, type OnboardingResult } from "./onboarding-modal"
+import { Sword } from "lucide-react"
 
 const NAME = "Caio Hero"
 const BASE_XP = 1200
@@ -68,6 +70,8 @@ export function HonestQuestApp() {
   const totalXp = BASE_XP + earnedXp
   const { level, xpInLevel, xpForNext } = useMemo(() => levelFromXp(totalXp), [totalXp])
   const completed = BASE_COMPLETED + extraCompleted
+
+  const completionRate = missions.length > 0 ? missions.filter(m => m.done).length / missions.length : 0
 
   // Detecta subida de nível
   useEffect(() => {
@@ -210,10 +214,12 @@ export function HonestQuestApp() {
                 justLeveledUp={justLeveledUp}
                 onGenerateSecretMission={generateSecretMission}
                 isGeneratingSecret={isGeneratingSecret}
+                completionRate={completionRate}
               />
             )}
 
             {view === "horarios" && <ScheduleView />}
+            {view === "evolucao" && <EvolutionView />}
 
             {view === "perfil" && (
               <ProfileView

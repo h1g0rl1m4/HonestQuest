@@ -3,4 +3,3 @@ uvicorn[standard]
 sqlalchemy
 aiosqlite
 python-dotenv
-llama-cpp-python

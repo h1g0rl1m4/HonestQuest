@@ -1,6 +1,6 @@
 "use client"
 
-import { ListChecks, PartyPopper, Sword } from "lucide-react"
+import { ListChecks, PartyPopper, Sword, Zap, Clock } from "lucide-react"
 import type { GoalId, Mission } from "@/lib/quest-data"
 import { GoalSelector } from "./goal-selector"
 import { StatCards } from "./stat-cards"
@@ -23,6 +23,7 @@ export function DashboardView({
   xpForNext,
   lastCompletedEpic,
   justLeveledUp,
+  completionRate,
 }: {
   name: string
   activeGoal: GoalId
@@ -40,6 +41,7 @@ export function DashboardView({
   justLeveledUp?: boolean
   onGenerateSecretMission?: () => void
   isGeneratingSecret?: boolean
+  completionRate?: number
 }) {
   const regularMissions = missions.filter((m) => !m.isEpic)
   const epicMissions = missions.filter((m) => m.isEpic)
@@ -66,6 +68,7 @@ export function DashboardView({
         level={level}
         xpInLevel={xpInLevel}
         xpForNext={xpForNext}
+        completionRate={completionRate}
       />
 
       <GoalSelector active={activeGoal} onSelect={onSelectGoal} />
@@ -169,7 +172,7 @@ export function DashboardView({
           </section>
         </div>
 
-        {/* Coluna direita: Mentor + Intenção */}
+        {/* Coluna direita: Mentor + Intenção + Micro-Missões */}
         <div className="space-y-4">
           <MentorCard
             streak={streak}
@@ -180,6 +183,62 @@ export function DashboardView({
             isNewSession={totalDone === 0}
           />
           <IntentionCard intention={intention} onChange={onIntentionChange} />
+
+          {/* Micro-Missões Rápidas (Deteção de inatividade) */}
+          <section
+            aria-labelledby="micro-heading"
+            className={`rounded-2xl border bg-card p-5 transition-colors ${
+              totalDone === 0
+                ? "border-primary/50 shadow-[0_0_15px_rgba(var(--primary),0.15)] ring-1 ring-primary/20"
+                : "border-border"
+            }`}
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Zap
+                  className={`size-5 ${totalDone === 0 ? "text-primary" : "text-muted-foreground"}`}
+                  aria-hidden="true"
+                />
+                <h2
+                  id="micro-heading"
+                  className={`font-heading text-lg font-semibold ${totalDone === 0 ? "text-foreground" : "text-muted-foreground"}`}
+                >
+                  Micro-Missões Rápidas
+                </h2>
+              </div>
+            </div>
+            {totalDone === 0 && (
+              <p className="mb-4 text-xs font-medium text-primary">
+                Pareces inativo. Começa com uma tarefa simples para ganhar balanço!
+              </p>
+            )}
+            <div className="space-y-2">
+              {[
+                { id: "micro-1", title: "Bebe um copo de água agora", xp: 5, duration: "1 min" },
+                { id: "micro-2", title: "Levanta-te e alonga por 2 min", xp: 5, duration: "2 min" },
+                { id: "micro-3", title: "Escreve 1 objetivo para hoje", xp: 10, duration: "3 min" },
+              ].map((micro) => (
+                <button
+                  key={micro.id}
+                  onClick={() => onComplete(micro.id)}
+                  className="flex w-full items-center justify-between rounded-xl border border-border/50 bg-background/50 p-3 text-left transition-colors hover:border-primary/30 hover:bg-primary/5"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="grid size-6 place-items-center rounded-full border border-primary/20 bg-primary/10">
+                      <div className="size-2 rounded-full bg-primary/50" />
+                    </div>
+                    <span className="text-sm font-medium">{micro.title}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Clock className="size-3" /> {micro.duration}
+                    </span>
+                    <span className="font-bold text-primary">+{micro.xp} XP</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </section>
         </div>
       </div>
     </div>

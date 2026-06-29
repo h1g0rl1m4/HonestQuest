@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from pydantic import BaseModel
 from typing import Optional
 from database import get_db
-from models import Missao, PlanoDiario, TipoMissao
+from models import Missao, PlanoDiario
 from ai_engine import gerar_missao_secreta_async
 import datetime
 
@@ -18,7 +19,7 @@ class GerarMissaoRequest(BaseModel):
     tempo: int
 
 class MissaoResponse(BaseModel):
-    id: int
+    id: str
     titulo: str
     detalhes: str
     tipo: str
@@ -26,17 +27,28 @@ class MissaoResponse(BaseModel):
     xp_recompensa: int
 
 @router.post("/gerar-secreta", response_model=MissaoResponse)
-async def gerar_missao_secreta(req: GerarMissaoRequest, db: Session = Depends(get_db)):
+async def gerar_missao_secreta(req: GerarMissaoRequest, db: AsyncSession = Depends(get_db)):
     """Gera uma nova missão secreta usando IA e salva no plano de hoje."""
     hoje = datetime.date.today()
     
     # 1. Pegar ou criar o Plano de Hoje
-    plano = db.query(PlanoDiario).filter(PlanoDiario.data == hoje).first()
+    result = await db.execute(select(PlanoDiario).filter(PlanoDiario.data == hoje))
+    plano = result.scalar_one_or_none()
     if not plano:
-        plano = PlanoDiario(data=hoje)
+        # Pega um user_id genérico ou o primeiro usuário da DB para o mock
+        from models import User
+        user_result = await db.execute(select(User).limit(1))
+        user = user_result.scalar_one_or_none()
+        if not user:
+            user = User(nome="Usuário Genérico", email="user@honestquest.com", password_hash="123")
+            db.add(user)
+            await db.commit()
+            await db.refresh(user)
+
+        plano = PlanoDiario(data=hoje, user_id=user.id)
         db.add(plano)
-        db.commit()
-        db.refresh(plano)
+        await db.commit()
+        await db.refresh(plano)
         
     # 2. Gerar a missão com IA
     try:
@@ -50,23 +62,25 @@ async def gerar_missao_secreta(req: GerarMissaoRequest, db: Session = Depends(ge
         
     # 3. Guardar na BD
     nova_missao = Missao(
-        plano_diario_id=plano.id,
+        plano_id=plano.id,
+        user_id=plano.user_id,
         titulo=resultado["titulo"],
         descricao=resultado["detalhes"],
-        tipo=TipoMissao.SECRETA,
+        tipo="secreta",
         concluida=False,
         xp_recompensa=100  # Missões secretas dão muito XP!
     )
     
     db.add(nova_missao)
-    db.commit()
-    db.refresh(nova_missao)
+    await db.commit()
+    await db.refresh(nova_missao)
     
     return {
-        "id": nova_missao.id,
+        "id": str(nova_missao.id),
         "titulo": nova_missao.titulo,
         "detalhes": nova_missao.descricao,
-        "tipo": nova_missao.tipo.value,
+        "tipo": nova_missao.tipo,
         "concluida": nova_missao.concluida,
         "xp_recompensa": nova_missao.xp_recompensa
     }
+

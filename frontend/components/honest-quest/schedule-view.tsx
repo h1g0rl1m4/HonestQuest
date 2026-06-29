@@ -66,6 +66,39 @@ export function ScheduleView() {
         </p>
       </header>
 
+      {/* Análise de Horários Produtivos */}
+      <section aria-labelledby="productivity-heading" className="rounded-2xl border border-border bg-card p-5">
+        <h2 id="productivity-heading" className="font-heading text-lg font-semibold mb-4">
+          Análise de Horários Produtivos
+        </h2>
+        <div className="flex flex-col gap-4">
+          <div className="flex h-24 items-end gap-1">
+            {[
+              { h: "08h", p: 70 }, { h: "09h", p: 85 }, { h: "10h", p: 92 }, { h: "11h", p: 88 },
+              { h: "12h", p: 45 }, { h: "13h", p: 30 }, { h: "14h", p: 40 }, { h: "15h", p: 55 },
+              { h: "16h", p: 65 }, { h: "17h", p: 75 }, { h: "18h", p: 80 }, { h: "19h", p: 60 },
+              { h: "20h", p: 50 }, { h: "21h", p: 35 }, { h: "22h", p: 20 }
+            ].map((d) => (
+              <div key={d.h} className="group relative flex flex-1 flex-col items-center gap-2">
+                <div 
+                  className={cn(
+                    "w-full rounded-t-sm transition-all",
+                    d.p >= 80 ? "bg-primary" : d.p >= 60 ? "bg-primary/60" : "bg-primary/20"
+                  )}
+                  style={{ height: `${d.p}%` }}
+                />
+                <span className="text-[10px] text-muted-foreground hidden sm:block">{d.h}</span>
+              </div>
+            ))}
+          </div>
+          <div className="rounded-xl bg-primary/10 p-4 border border-primary/20">
+            <p className="text-sm">
+              <span className="font-semibold text-primary">Dica da IA:</span> Os teus picos de foco são de manhã. Agenda tarefas difíceis entre as 9h e as 11h.
+            </p>
+          </div>
+        </div>
+      </section>
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {WEEK.map((d) => (
           <article key={d.day} className="rounded-2xl border border-border bg-card p-4">

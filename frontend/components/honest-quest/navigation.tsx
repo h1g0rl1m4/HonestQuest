@@ -1,14 +1,15 @@
 "use client"
 
-import { Home, CalendarDays, Trophy, Target } from "lucide-react"
+import { Home, CalendarDays, Trophy, Target, TrendingUp } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-export type ViewId = "dashboard" | "horarios" | "perfil"
+export type ViewId = "dashboard" | "horarios" | "perfil" | "evolucao"
 
 const NAV: { id: ViewId; label: string; icon: typeof Home }[] = [
   { id: "dashboard", label: "Dashboard", icon: Home },
   { id: "horarios", label: "Horários", icon: CalendarDays },
   { id: "perfil", label: "Perfil & Conquistas", icon: Trophy },
+  { id: "evolucao", label: "Evolução", icon: TrendingUp },
 ]
 
 function Logo() {
