@@ -126,6 +126,8 @@ export function ProfileView({
             </article>
           ))}
         </div>
+      </section>
+
       <section aria-labelledby="titles-heading" className="mt-8">
         <div className="mb-3 flex items-baseline justify-between">
           <h2 id="titles-heading" className="font-heading text-lg font-semibold">

@@ -23,6 +23,8 @@ export function DashboardView({
   xpForNext,
   lastCompletedEpic,
   justLeveledUp,
+  onGenerateSecretMission,
+  isGeneratingSecret,
   completionRate,
 }: {
   name: string
